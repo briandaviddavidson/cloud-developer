@@ -16,32 +16,50 @@ router.get('/', async (req: Request, res: Response) => {
     res.send(items);
 });
 
-//@TODO
-//Add an endpoint to GET a specific resource by Primary Key
+//get a specific resource by key
+router.get('/:id', requireAuth, async (req: Request, res: Response) => {
+  let id = req.params.id;
+  FeedItem.findOne({
+    where: {
+      id: id
+    },
+    order: [
+      ['createdAt', 'DESC']
+    ],
+  }).then(item => {
+    if (!item) {
+      console.log('Not found!');
+    } else {
+      res.send(item)
+    }
+  })
+});
 
 // update a specific resource
-router.patch('/:id', 
-    requireAuth, 
-    async (req: Request, res: Response) => {
-        //@TODO try it yourself
-        res.send(500).send("not implemented")
+router.patch('/:id', requireAuth, async (req: Request, res: Response) => {
+  let body = req.body;
+  await FeedItem.update(
+    { caption: req.body.caption },
+    { returning: true, where: { id: req.params.id } }
+  )
+  res.status(202).send({ message: "Caption updated" })
 });
 
 
 // Get a signed url to put a new item in the bucket
-router.get('/signed-url/:fileName', 
-    requireAuth, 
+router.get('/signed-url/:fileName',
+    requireAuth,
     async (req: Request, res: Response) => {
     let { fileName } = req.params;
     const url = AWS.getPutSignedUrl(fileName);
     res.status(201).send({url: url});
 });
 
-// Post meta data and the filename after a file is uploaded 
+// Post meta data and the filename after a file is uploaded
 // NOTE the file name is they key name in the s3 bucket.
 // body : {caption: string, fileName: string};
-router.post('/', 
-    requireAuth, 
+router.post('/',
+    requireAuth,
     async (req: Request, res: Response) => {
     const caption = req.body.caption;
     const fileName = req.body.url;
