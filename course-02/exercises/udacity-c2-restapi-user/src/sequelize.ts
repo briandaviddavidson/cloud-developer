@@ -10,8 +10,13 @@ export const sequelize = new Sequelize({
   "password": c.password,
   "database": c.database,
   "host":     c.host,
-
+  pool: {
+    max: 15,
+    min: 5,
+    idle: 20000,
+    evict: 15000,
+    acquire: 30000
+  },
   dialect: 'postgres',
   storage: ':memory:',
 });
-
